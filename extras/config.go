@@ -3,8 +3,8 @@ package extras
 import (
   "encoding/json"
   "fmt"
-  "os"
   "io/ioutil"
+  "os"
   "strings"
 )
 
@@ -19,9 +19,16 @@ type Config struct {
 type Backend struct {
   Filter string       `json:"filter"`
   Backend string      `json:"backend"`
+  Timeout int      `json:"timeout"`
   BackendEnv string   `json:"backendEnv"`
   CertFile string     `json:"certFile"`
   ServerName string   `json:"serverName"`
+  PermissionsRequired []string `json:"permissions_required"`
+  OutGoingMethodName string `json:"out_going_method_name"`
+  IncomingType string `json:"incoming_type"`
+  OutgoingType string `json:"outgoing_type"`
+  RequestProtoType string `json:"request_proto_type"`
+  ResponseProtoType string  `json:"response_proto_type"`
 }
 
 func GetConfiguration(file string) Config {

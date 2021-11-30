@@ -1,6 +1,8 @@
 package main
 
 import (
+  "carou-gateway/extras"
+  _ "carou-gateway/protos"
   "encoding/json"
   "errors"
   "fmt"
@@ -13,8 +15,6 @@ import (
   "google.golang.org/grpc"
   "google.golang.org/protobuf/reflect/protoreflect"
   "google.golang.org/protobuf/reflect/protoregistry"
-  "carou-gateway/extras"
-  _ "carou-gateway/protos"
   "io/ioutil"
   "log"
   "net"
@@ -75,21 +75,27 @@ func home(w http.ResponseWriter, request *http.Request) {
   requestURI := request.RequestURI
   method := request.Method
   body := request.Body
+  backendDetails := getBackendServerDetails(requestURI)
+  outgoingMethodName := backendDetails.OutGoingMethodName
+  requestProto := backendDetails.RequestProtoType
+  responseProto := backendDetails.ResponseProtoType
+  serverDetails := backendDetails.Backend
+  timeout := backendDetails.Timeout
   //decoder := json.NewDecoder(request.Body)
   bytes, err := ioutil.ReadAll(request.Body)
 
-  pbtype, _ := protoregistry.GlobalTypes.FindMessageByName("ocr_model_proto.Request")
+  pbtype, _ := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(requestProto))
   fmt.Println(pbtype)
   msg := proto2.MessageV1(pbtype.New().Interface())
   json.Unmarshal(bytes, msg)
 
-  conn, err := grpc.DialContext(ctxutils.NewBackgroundContext(context.Background()), "10.240.1.27:32721",
+  conn, err := grpc.DialContext(ctxutils.NewBackgroundContext(context.Background()), serverDetails,
     grpc.WithInsecure(),
-    grpc.WithTimeout(time.Duration(50000)*time.Millisecond))
+    grpc.WithTimeout(time.Duration(timeout)*time.Millisecond))
 
-  outputType, _ := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName("ocr_model_proto.Response"))
+  outputType, _ := protoregistry.GlobalTypes.FindMessageByName(protoreflect.FullName(responseProto))
   output := proto2.MessageV1(outputType.New().Interface())
-  err1 := grpc.Invoke(context.Background(), "/ocr_model_proto.OCR/Image2Text", msg, output, conn)
+  err1 := grpc.Invoke(context.Background(), outgoingMethodName, msg, output, conn)
   if err != nil || err1 != nil{
     fmt.Println(err)
   }
@@ -133,4 +139,19 @@ func GetServer (config extras.Config) *grpc.Server {
   //}
 
   return grpc.NewServer(opts...)
+}
+
+func getBackendServerDetails(incomingURI string) extras.Backend {
+  configurationFile := "./config.json"
+  config := extras.GetConfiguration(configurationFile)
+  for _, backend := range config.Backends {
+    if strings.HasPrefix(incomingURI, backend.Filter) {
+      return backend
+    }
+  }
+  return extras.Backend{}
+}
+
+func validateUser() bool {
+  return true
 }

@@ -20,6 +20,15 @@
       "filter": "/ocr_model_proto.OCR/Image2Text",
       "backend": "10.240.1.27:32721",
       "required_permissions": "[admin, flaggings.manager]"
+    },
+    {
+      "filter": "/getImage2Text",
+      "backend": "10.240.1.27:32721",
+      "required_permissions": "[admin, flaggings.manager]",
+      "out_going_method_name": "/ocr_model_proto.OCR/Image2Text",
+      "timeout": 5000,
+      "request_proto_type": "ocr_model_proto.Request",
+      "response_proto_type": "ocr_model_proto.Response"
     }
   ]
 }
