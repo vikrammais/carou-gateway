@@ -1,0 +1,25 @@
+{
+  "verbose": true,
+  "listen": "localhost:9281",
+  "certFile": "./ssl/grpc.localhost.pem",
+  "keyFile": "./ssl/grpc.localhost.key",
+  "backends": [
+    {
+      "backend": "localhost:9281",
+      "filter": "/CarouGateway_proto.CarouGatewayService.Echo"
+    },
+    {
+      "backend": "localhost:9281",
+      "filter": "/CarouGateway_proto.CarouGatewayService"
+    },
+    {
+      "backend": "localhost:9281",
+      "filter": "/CarouGatewayService.Echo"
+    },
+    {
+      "filter": "/ocr_model_proto.OCR/Image2Text",
+      "backend": "10.240.1.27:32721",
+      "required_permissions": "[admin, flaggings.manager]"
+    }
+  ]
+}
